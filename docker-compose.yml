@@ -1,0 +1,32 @@
+version:     "2.3"
+services:
+  nginx:
+    build:   ./nginx
+    links:
+        - node:node
+    ports:
+      - "80:80"
+    restart: always
+    depends_on:
+      - node
+
+  node:
+    build:   ./node
+    links:
+      - mongo:mongo
+    restart: always
+    scale: 3
+    depends_on:
+      "mongo":
+        condition: service_healthy
+        
+  mongo:
+    image:   mongo
+    volumes:
+          - ./data/db:/data/db
+    restart: always
+    healthcheck:
+      test: echo 'db.stats().ok' | mongo localhost:27017/urlshort --quiet
+      interval: 30s
+      timeout: 5s
+      retries: 12
